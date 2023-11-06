@@ -1,46 +1,71 @@
 from ballast import Ballast, ballast_eq
-from scipy.optimize import least_squares
-from scipy.integrate import solve_ivp
 from constants import *
 
-class SousMarin():
-    def __init__(self, ballasts : list[Ballast], m_vide, volume):
-        self.ballast = ballast_eq(ballasts)
-        self.m_vide = m_vide
-        self.masse = m_vide + self.ballast.V*RHO_EAU 
-        self.position = (0,0,0) #x,y,z BOND ; avec z vers le bas
-        self.volume = volume
-        self.coef_f = 10 #????
-        self.rho_v = self.m_vide/self.volume
-        self.V_eq = (self.volume*RHO_EAU - self.m_vide) / RHO_EAU
-    def plongee(self, z):
-        def cout(T,S): # Signatures : T = (tau,tf) ; S = (sub,z)
-            rho = lambda t : rho_s_d(t, T[0] ,S[1])
-            def equation(t,y):
-                pass                
+from scipy.optimize import least_squares
+from scipy.integrate import solve_ivp
+import numpy as np
 
+# -------------------------------------------------------------------------- Constantes--------------------------------------------------------------------
 
+VS = 4 # Volume du sous-marin ; en m-3
+MASSE_V = 100 # masse à vide du sous-marin en kg
+RHO_V = MASSE_V/VS # masse volumique, à vide, du sous-marin
+V_EAU_EQ = (VS*RHO_EAU - MASSE_V)/RHO_EAU # Volume d'eau nécessaire pour l'équilibre poids / Archimède
+DV = 2e-1 # Débit volumique en m-3.s-1
+V_EAU_0 = 0 # Volume d'eau initialement présent dans les ballasts ; en m-3
+V_EAU_MAX = 3 # Volume d'eau maximal ie capacité des ballasts en m-3
+Z_INITIALE,V_INITIALE = 0,0 # Profondeur et vitesse initiales respectivment en m et m.s-1
+LAMBDA = 100 # Coefficient de frottement... 
+ZC = 5 # en m : profondeur cible
+g = 9.81
+RHO_EAU = 1e3
 
-def rho_s_d(t, tau, sub : SousMarin):
-    if t<tau:
-        return rho_s_remplissage(t,sub)
+# -------------------------------------------------------- Évolution de la masse volumique durant la descente ----------------------------------------------
+
+def v_eau(t : float, TAU : float) -> float:
+    V_TAU = V_EAU_0 + DV*TAU
+    if t < TAU:
+        return V_EAU_0 + DV*t if V_EAU_0 + DV*t < V_EAU_MAX else V_EAU_MAX
     else:
-        return rho_s_vidange(t-tau,sub)
+        return V_TAU - DV*(t-TAU) if V_TAU - DV*(t-TAU) > V_EAU_EQ else V_EAU_EQ
 
-def rho_s_remplissage(t,sub : SousMarin):
-    volume_candidat = sub.ballast.Dv*t + sub.ballast.V
-    if candidat <= sub.ballast.Vmax:
-        sub.ballast.V = volume_candidat
-        return (RHO_EAU/sub.volume)*volume_candidat + sub.rho_v
-    else:
-        sub.ballast.V = sub.ballast.Vmax
-        return sub.ballast.V*(RHO_EAU/sub.volume) + sub.rho_v
+def rho(t : float, TAU : float) -> float:
+    return (RHO_EAU*v_eau(t,TAU) + MASSE_V)/VS
 
-def rho_s_vidange(t,sub : SousMarin):
-    volume_candidat = -sub.ballast.Dv*t + sub.ballast.V
-    if candidat >= 0:
-        sub.ballast.V = volume_candidat
-        return (RHO_EAU/sub.volume)*volume_candidat + sub.rho_v
+# ------------------------------------------------------- Équation du mouvement en fonction de la constante tau --------------------------------------------
+
+def creer_equation(TAU : float):
+    rho_s = lambda t : rho(t, TAU)
+    m = lambda t : rho_s(t)*VS
+    def equation(t,y):
+        def archi(z,t):
+            if z>0:
+                return g*(1 - (RHO_EAU/rho_s(t)))
+            else:
+                return g
+        d2z = archi(y[0],t) - ((LAMBDA*(y[1]**2))/m(t))
+        return [y[1], d2z]
+    return equation
+
+# --------------------------------------------------------------- Calcul du coût d'une solution donnée ------------------------------------------------------
+
+def cout(z : list[float], vz : list[float] , ZC : float, TAU : float, TF : float) -> float :
+    if TAU +1 >= TF:
+        return 1e6
     else:
-        sub.ballast.V = s0
-        return sub.rho_v
+        return np.abs(z[-1]-ZC) + np.abs(vz[-1])
+
+# ------------------------------------------------------- Optimisation d'une fonction pour trouver TAU et TF ------------------------------------------------
+
+def optimiser(T : list[float]) -> float: # T = [TAU, TF]
+    eq = creer_equation(T[0])
+    solution = solve_ivp(eq, [0,T[1]], [Z_INITIALE,V_INITIALE])
+    print(solution.message)
+    z,vz = solution.y[0],solution.y[1]
+    return cout(z,vz, ZC, T[0], T[1])
+
+# sidieuleveut = least_squares(optimiser, [0.1,5])
+# print(sidieuleveut)
+
+print(optimiser([1,5]))
+
