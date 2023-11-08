@@ -2,15 +2,17 @@ import numpy as np
 import matplotlib.pyplot as plt 
 from matplotlib.widgets import Slider
 
-VS = 4 # Volume du sous-marin ; en m-3
-LAMBDA = 15 # Coefficient de frottement... 
-ZC = 5 # en m : profondeur cible
+VS = 9.6e-4 # Volume du sous-marin ; en m-3, c'est le volume envisagé du sous-marin construit
+LAMBDA = 6.3 # Coefficient de frottement... 
+ZC = 20 # en m : profondeur cible
 g = 9.81
 RHO_EAU = 1e3
+MASSE_V = 100e-3
 
-TAU = 2 #en secondes, à ajuster après
+TAU = 10 #en secondes, à ajuster après
+OFFSET = 6
 
-u = lambda t : t-(20*TAU)
+u = lambda t : t-(OFFSET*TAU)
 
 def z(t,ZC,TAU):
     return ZC/(1+np.exp(-u(t)/TAU))
@@ -24,36 +26,49 @@ def d2z(t, ZC,TAU):
 def rho(t, ZC,TAU):
     return (LAMBDA*dz(t,ZC,TAU)**2 + g*RHO_EAU*VS)/(VS*(g-d2z(t,ZC,TAU)))
 
-X = np.arange(0, 100, 0.1)
+def V(t, ZC, TAU): # en L
+    return ((VS*rho(t, ZC, TAU) - MASSE_V)/RHO_EAU)*1e3
 
-Y = rho(X, ZC,TAU)
+X = np.arange(0, 240, 0.1)
+
+Y = V(X, ZC,TAU)
 Y2 = z(X,ZC,TAU)
 
-# Matplotlib : Sorcellerie
+# --------------------------------------------------------------------Matplotlib : Sorcellerie--------------------------------------------------------------------
 
-ax = plt.axes([0.1, 0.15, 0.8, 0.8])
-graphe_rho, = ax.plot(X,Y)
+ax = plt.axes([0.1, 0.20, 0.4, 0.75])
+graphe_V, = ax.plot(X,Y)
+
+ax2 = plt.axes([0.55, 0.2, 0.4, 0.75])
+graphe_z, = ax2.plot(X, Y2)
+
 
 ax_curseurZ = plt.axes([0.25, 0.05, 0.6, 0.03])
-curseurZ = Slider(ax_curseurZ, "Profondeur", 0, 100, valinit=5)
+curseurZ = Slider(ax_curseurZ, "Profondeur", 0, ZC, valinit=ZC)
 
 def updateZ(event):
     zc = curseurZ.val
     tau = curseurTAU.val
-    YPRIME = rho(X, zc, tau)
-    graphe_rho.set_data(X, YPRIME)
+    YPRIME = V(X, zc, tau)
+    Y2PRIME = z(X, zc, tau)
+    print( f"Nouvelle masse volumique : RHO_MAX = {np.max(YPRIME)}", f" RHO_MIN = {np.min(YPRIME)}")
+    graphe_V.set_data(X, YPRIME)
+    graphe_z.set_data(X, Y2PRIME)
     plt.draw()
 
 curseurZ.on_changed(updateZ)
 
 ax_curseurTAU = plt.axes([0.25, 0.01, 0.6, 0.03])
-curseurTAU = Slider(ax_curseurTAU, r"$\tau$", 0, 100, valinit=2)
+curseurTAU = Slider(ax_curseurTAU, r"$\tau$", 0, TAU, valinit=TAU)
 
 def updateTAU(event):
     zc = curseurZ.val
     tau = curseurTAU.val
-    YPRIME = rho(X, zc, tau)
-    graphe_rho.set_data(X, YPRIME)
+    YPRIME = V(X, zc, tau)
+    Y2PRIME = z(X, zc, tau)
+    graphe_V.set_data(X, YPRIME)
+    graphe_z.set_data(X, Y2PRIME)
+    print( f"Nouvelle masse volumique : RHO_MAX = {np.max(YPRIME)}", f" RHO_MIN = {np.min(YPRIME)}")
     plt.draw()
 
 curseurTAU.on_changed(updateTAU)
