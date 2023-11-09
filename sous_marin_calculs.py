@@ -4,13 +4,13 @@ from matplotlib.widgets import Slider
 
 VS = 9.6e-4 # Volume du sous-marin ; en m-3, c'est le volume envisagé du sous-marin construit
 LAMBDA = 6.3 # Coefficient de frottement... 
-ZC = 20 # en m : profondeur cible
+ZC = 2 # en m : profondeur cible
 g = 9.81
 RHO_EAU = 1e3
-MASSE_V = 100e-3
+MASSE_V = 500e-3
 
-TAU = 10 #en secondes, à ajuster après
-OFFSET = 6
+TAU = 2 #en secondes, à ajuster après
+OFFSET = 7
 
 u = lambda t : t-(OFFSET*TAU)
 
@@ -29,7 +29,7 @@ def rho(t, ZC,TAU):
 def V(t, ZC, TAU): # en L
     return ((VS*rho(t, ZC, TAU) - MASSE_V)/RHO_EAU)*1e3
 
-X = np.arange(0, 240, 0.1)
+X = np.arange(0, 30, 0.1)
 
 Y = V(X, ZC,TAU)
 Y2 = z(X,ZC,TAU)
@@ -59,7 +59,7 @@ def updateZ(event):
 curseurZ.on_changed(updateZ)
 
 ax_curseurTAU = plt.axes([0.25, 0.01, 0.6, 0.03])
-curseurTAU = Slider(ax_curseurTAU, r"$\tau$", 0, TAU, valinit=TAU)
+curseurTAU = Slider(ax_curseurTAU, r"$\tau$", 0, TAU+1, valinit=TAU)
 
 def updateTAU(event):
     zc = curseurZ.val
@@ -73,4 +73,52 @@ def updateTAU(event):
 
 curseurTAU.on_changed(updateTAU)
 
+from scipy import optimize
+from scipy.integrate import solve_ivp
+
+result = optimize.minimize_scalar(lambda t : -V(t, ZC, TAU))
+result2 = optimize.minimize_scalar(lambda t : V(t, ZC, TAU))
+print(result)
+
+plt.show()
+
+# ------------------------------------- Calculer le profil de z obtenu avec une approximation affine de V_eau --------------------------------------
+
+T1 = result.x
+dt = 6 #s
+T0 = T1-dt
+T2 = T1+dt+0.93
+Vmax = -result.fun
+Veq = 0.46
+DV = (Vmax-Veq)/dt
+print(DV)
+
+def Vaff(t):
+    if t<T0:
+        return Veq
+    elif T0<=t< T1:
+        return DV*(t-T0) + Veq
+    elif t<T2:
+        return DV*(T1-T0) + Veq - DV*(t-T1)
+    else:
+        v0 = DV*(T1-T0) + Veq - DV*(T2-T1)
+        vt = v0 + DV*(t-T2)
+        return vt if vt<Veq else Veq
+
+rhoaff = lambda t : (RHO_EAU*Vaff(t)*1e-3 + MASSE_V)/VS
+
+def equation(t,y):
+    if y[0]<0:
+        return [y[1],g-(LAMBDA*y[1]**2)/(VS*rhoaff(t))]
+    else:
+        return [y[1], g*(1-(RHO_EAU/rhoaff(t)))- (LAMBDA*y[1]**2)/(VS*rhoaff(t))]
+
+sol = solve_ivp(equation, [0, 30], [0, 0])
+
+print(sol)
+
+plt.subplot(121)
+plt.plot(sol.t, [Vaff(t) for t in sol.t])
+plt.subplot(122)
+plt.plot(sol.t,sol.y[0])
 plt.show()
