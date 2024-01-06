@@ -10,7 +10,7 @@ RHO_EAU = 1e3
 MASSE_V = 100e-3
 
 TAU = 10 #en secondes, à ajuster après
-OFFSET = 6
+OFFSET = 8
 
 u = lambda t : t-(OFFSET*TAU)
 
