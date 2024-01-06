@@ -5,3 +5,4 @@ class SousMarin():
         self.ballast = interface_ballast
         self.volume = volume
         self.LAMBDA = LAMBDA
+        self.masse_a_vide = masse_a_vide
