@@ -1,6 +1,5 @@
-from Classes.Ballast import Ballast
-
 class BallastInterface():
+    from Classes.Ballast import Ballast
     def __init__(self, ballast : Ballast):
         self.ballast = ballast
     def getDv(self):

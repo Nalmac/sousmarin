@@ -8,14 +8,15 @@ class Grapher():
     def __init__(self):
         pass
 
-    def simulation(self, I : np.ndarray, solver : SolverInterface, zc_max : float, tau : float, phi : float):
+    def simulation(self, T : list[float], solver : SolverInterface, zc_max : float, tau : float, phi : float):
         import matplotlib.pyplot as plt
+        from matplotlib.widgets import Slider
         
-        z,dz,d2z = genererOrdre2(zc_max, tau, phi)
-        rho = solver.solveRho(dz, d2z)
-        v = solver.vEauFromRho(rho)
+        z,v = solver.genererZV(zc_max, tau, phi)
 
-        V,Z = v(I),z(I)
+        I = np.linspace(T[0], T[1], 1000)
+
+        V,Z = v(I)*(1e6),z(I)
 
         ax = plt.axes([0.1, 0.20, 0.4, 0.75])
         graphe_V, = ax.plot(I,V)
@@ -27,15 +28,13 @@ class Grapher():
         ax_curseurZ = plt.axes([0.25, 0.05, 0.6, 0.03])
         curseurZ = Slider(ax_curseurZ, "Profondeur", 0, zc_max, valinit=zc_max)
 
-        def updateZ(event):
+        def update(event):
             zc = curseurZ.val
             tau = curseurTAU.val
             
-            z,dz,d2z = genererOrdre2(zc, tau, phi)
-            rho = solver.solveRho(dz, d2z)
-            v = solver.vEauFromRho(rho)
+            z,v = solver.genererZV(zc, tau, phi)
 
-            VMODIFIE = v(I)
+            VMODIFIE = v(I)*(1e6)
             ZMODIFIE = z(I)
 
             graphe_V.set_data(I, VMODIFIE)
@@ -43,27 +42,11 @@ class Grapher():
             print( f"Nouveau volume : V_MAX = {np.max(VMODIFIE)}", f" V_MIN = {np.min(VMODIFIE)}")
             plt.draw()
 
-        curseurZ.on_changed(updateZ)
+        curseurZ.on_changed(update)
 
         ax_curseurTAU = plt.axes([0.25, 0.01, 0.6, 0.03])
         curseurTAU = Slider(ax_curseurTAU, r"$\tau$", 0, tau+1, valinit=tau)
 
-        def updateTAU(event):
-            zc = curseurZ.val
-            tau = curseurTAU.val
-            
-            z,dz,d2z = genererOrdre2(zc, tau, phi)
-            rho = solver.solveRho(dz, d2z)
-            v = solver.vEauFromRho(rho)
-
-            VMODIFIE = v(I)
-            ZMODIFIE = z(I)
-
-            graphe_V.set_data(I, VMODIFIE)
-            graphe_z.set_data(I, ZMODIFIE)
-            print( f"Nouveau volume : V_MAX = {np.max(VMODIFIE)}", f" V_MIN = {np.min(VMODIFIE)}")
-            plt.draw()
-
-        curseurTAU.on_changed(updateTAU)
+        curseurTAU.on_changed(update)
 
         plt.show()
