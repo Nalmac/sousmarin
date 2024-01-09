@@ -1,7 +1,7 @@
 from numpy import exp
 
 def genererOrdre2(A,tau,phi):
-    u = lambda t : t-(phi*tau)
+    u = lambda t : t-phi
 
     def z(t):
         return A/(1+exp(-u(t)/tau))

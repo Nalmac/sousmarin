@@ -19,9 +19,14 @@ class Grapher():
         V,Z = v(I)*(1e6),z(I)
 
         ax = plt.axes([0.1, 0.20, 0.4, 0.75])
+        ax.set_xlabel(r"Temps $t$")
+        ax.set_ylabel(r"$V_{eau}$")
         graphe_V, = ax.plot(I,V)
 
+        
         ax2 = plt.axes([0.55, 0.2, 0.4, 0.75])
+        ax2.set_xlabel(r"Temps $t$")
+        ax2.set_ylabel(r"Profondeur $z$")
         graphe_z, = ax2.plot(I, Z)
 
 
@@ -45,7 +50,7 @@ class Grapher():
         curseurZ.on_changed(update)
 
         ax_curseurTAU = plt.axes([0.25, 0.01, 0.6, 0.03])
-        curseurTAU = Slider(ax_curseurTAU, r"$\tau$", 0, tau+1, valinit=tau)
+        curseurTAU = Slider(ax_curseurTAU, r"$\tau$", 0, 2*tau, valinit=tau)
 
         curseurTAU.on_changed(update)
 

@@ -30,7 +30,7 @@ class TestSolverCalculations(unittest.TestCase):
         for i in range(len(self.ZC_TESTS)):
             with self.subTest(i=i):
                 z,_ = self.solver.genererZV(self.ZC_TESTS[i], self.TAU_TESTS[i],10)
-                self.assertAlmostEqual((z(0.01)-z(0))/0.01,0, 3)
+                self.assertAlmostEqual((z(0.01)-z(0))/0.01,0, 1)
     
     def testVolume(self):
         for i in range(len(self.ZC_TESTS)):

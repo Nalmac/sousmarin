@@ -17,4 +17,4 @@ interface_ordi = SolverInterface(ordi)
 
 logiciel_graph = Grapher()
 
-logiciel_graph.simulation([0, 200], solver=ordi, zc_max=15, tau=10, phi=20)
+logiciel_graph.simulation([0, 200], solver=ordi, zc_max=15, tau=10, phi=100)
