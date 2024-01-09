@@ -1,8 +1,14 @@
 class Estimator():
     def __init__(self):
         pass
+    
+    def calculerT0(self, v_eau, epsilon : float, delta : float) -> float:
+        pass
+    
+    def calculerTau(self, DV : float):
+        pass
 
-    def approxVEau(v_eau, I : list[float], DV : float):
+    def approxVEau(self, v_eau, I : list[float], DV : float):
         from scipy.optimize import minimize_scalar
 
         f = lambda t : -v_eau(t)
@@ -14,12 +20,12 @@ class Estimator():
 
         def vApprox(t):
             if t<debut:
-                return 0
+                return v_eau(0)
             elif t<= t_max:
                 return DV*(t-debut)
             elif t<= fin:
                 return V_max - DV*(t-t_max)
             else:
-                return 0
+                return v_eau(0)
 
         return vApprox
