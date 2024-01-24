@@ -6,6 +6,8 @@ from Interfaces.BallastInterface import BallastInterface
 from Interfaces.SolverInterface import SolverInterface
 from Interfaces.SousMarinInterface import SousMarinInterface
 
+from Classes.Estimator import Estimator
+
 ballast = Ballast(1, 20, 0)
 interface_ballast = BallastInterface(ballast)
 
@@ -17,4 +19,16 @@ interface_ordi = SolverInterface(ordi)
 
 logiciel_graph = Grapher()
 
-logiciel_graph.simulation([0, 200], solver=ordi, zc_max=15, tau=10, phi=100)
+# Partie de test, pas final
+
+logiciel_estimation = Estimator()
+
+v = logiciel_estimation.genererVEauAffine(5e-6, 3, 0.01, 5, [0,500], interface_ordi)
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+X = np.arange(0, 500, 0.1)
+Y = [v(t) for t in X]
+plt.plot(X,Y)
+plt.show()

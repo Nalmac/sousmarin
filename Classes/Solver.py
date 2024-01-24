@@ -3,6 +3,7 @@ class Solver():
 
     def __init__(self, sous_marin : SousMarinInterface):
         self.sous_marin = sous_marin
+        
     def solveRho(self,dz,d2z):
         from Utils.Constants import RHO_EAU,g
         LAMBDA = self.sous_marin.get_lambda()
