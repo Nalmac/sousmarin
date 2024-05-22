@@ -22,10 +22,10 @@ while clock < TF:
         print(0)
     elif clock < T1:
         print(1)
+        # Remplir le ballast
     elif clock < T2:
         print(-1)
-    elif clock < T3:
-        print(1)
+        # Vider le ballast
     else:
         print(0)
     clock += dt
