@@ -2,15 +2,15 @@ import numpy as np
 import matplotlib.pyplot as plt 
 from matplotlib.widgets import Slider
 
-VS = 9.6e-4 # Volume du sous-marin ; en m-3, c'est le volume envisagé du sous-marin construit
-LAMBDA = 6.3 # Coefficient de frottement... 
-ZC = 2 # en m : profondeur cible
+VS = 30e-3 # Volume du sous-marin ; en m-3, c'est le volume envisagé du sous-marin construit
+LAMBDA = 80 # Coefficient de frottement... 
+ZC = 0.5 # en m : profondeur cible
 g = 9.81
 RHO_EAU = 1e3
-MASSE_V = 500e-3
+MASSE_V = 29.925
 
-TAU = 2 #en secondes, à ajuster après
-OFFSET = 7
+TAU = 100 #en secondes, à ajuster après
+OFFSET = 5
 
 u = lambda t : t-(OFFSET*TAU)
 
@@ -29,7 +29,7 @@ def rho(t, ZC,TAU):
 def V(t, ZC, TAU): # en L
     return ((VS*rho(t, ZC, TAU) - MASSE_V)/RHO_EAU)*1e3
 
-X = np.arange(0, 30, 0.1)
+X = np.arange(0,2000, 1)
 
 Y = V(X, ZC,TAU)
 Y2 = z(X,ZC,TAU)
@@ -121,4 +121,4 @@ plt.subplot(121)
 plt.plot(sol.t, [Vaff(t) for t in sol.t])
 plt.subplot(122)
 plt.plot(sol.t,sol.y[0])
-plt.show()
+#plt.show()
