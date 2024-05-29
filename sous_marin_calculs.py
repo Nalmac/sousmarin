@@ -9,7 +9,7 @@ g = 9.81
 RHO_EAU = 1e3
 MASSE_V = 29.925
 
-TAU = 100 #en secondes, à ajuster après
+TAU = 5.4 #en secondes, à ajuster après
 OFFSET = 5
 
 u = lambda t : t-(OFFSET*TAU)
@@ -29,7 +29,7 @@ def rho(t, ZC,TAU):
 def V(t, ZC, TAU): # en L
     return ((VS*rho(t, ZC, TAU) - MASSE_V)/RHO_EAU)*1e3
 
-X = np.arange(0,1200, 1)
+X = np.arange(0,60, 1)
 
 Y = V(X, ZC,TAU)
 Y2 = z(X,ZC,TAU)
@@ -39,7 +39,7 @@ Y2 = z(X,ZC,TAU)
 ax = plt.axes([0.1, 0.20, 0.4, 0.75])
 graphe_V, = ax.plot(X,Y)
 ax.set_xlabel("t")
-ax.set_ylabel(r"V")
+ax.set_ylabel(r"V(L)")
 
 ax2 = plt.axes([0.55, 0.2, 0.4, 0.75])
 graphe_z, = ax2.plot(X, Y2)
