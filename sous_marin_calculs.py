@@ -29,7 +29,7 @@ def rho(t, ZC,TAU):
 def V(t, ZC, TAU): # en L
     return ((VS*rho(t, ZC, TAU) - MASSE_V)/RHO_EAU)*1e3
 
-X = np.arange(0,2000, 1)
+X = np.arange(0,1200, 1)
 
 Y = V(X, ZC,TAU)
 Y2 = z(X,ZC,TAU)
@@ -38,9 +38,13 @@ Y2 = z(X,ZC,TAU)
 
 ax = plt.axes([0.1, 0.20, 0.4, 0.75])
 graphe_V, = ax.plot(X,Y)
+ax.set_xlabel("t")
+ax.set_ylabel(r"V")
 
 ax2 = plt.axes([0.55, 0.2, 0.4, 0.75])
 graphe_z, = ax2.plot(X, Y2)
+ax2.set_xlabel("t")
+ax2.set_ylabel("z")
 
 
 ax_curseurZ = plt.axes([0.25, 0.05, 0.6, 0.03])
@@ -84,13 +88,16 @@ plt.show()
 
 # ------------------------------------- Calculer le profil de z obtenu avec une approximation affine de V_eau --------------------------------------
 
+DV = 3.7e-7 # L.s-1
 T1 = result.x
-dt = 6 #s
-T0 = T1-dt
-T2 = T1+dt+0.93
 Vmax = -result.fun
-Veq = 0.46
-DV = (Vmax-Veq)/dt
+Veq = 75e-6
+
+dt = (Vmax-Veq)/2 #s
+T0 = T1-dt
+T2 = T1+dt
+
+
 print(DV)
 
 def Vaff(t):
@@ -101,9 +108,7 @@ def Vaff(t):
     elif t<T2:
         return DV*(T1-T0) + Veq - DV*(t-T1)
     else:
-        v0 = DV*(T1-T0) + Veq - DV*(T2-T1)
-        vt = v0 + DV*(t-T2)
-        return vt if vt<Veq else Veq
+        return Veq
 
 rhoaff = lambda t : (RHO_EAU*Vaff(t)*1e-3 + MASSE_V)/VS
 
@@ -113,7 +118,7 @@ def equation(t,y):
     else:
         return [y[1], g*(1-(RHO_EAU/rhoaff(t)))- (LAMBDA*y[1]**2)/(VS*rhoaff(t))]
 
-sol = solve_ivp(equation, [0, 30], [0, 0])
+sol = solve_ivp(equation, [0, 1000], [0, 0])
 
 print(sol)
 
@@ -121,4 +126,4 @@ plt.subplot(121)
 plt.plot(sol.t, [Vaff(t) for t in sol.t])
 plt.subplot(122)
 plt.plot(sol.t,sol.y[0])
-#plt.show()
+plt.show()
